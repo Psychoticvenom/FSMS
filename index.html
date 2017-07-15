@@ -3,15 +3,14 @@
 <html>
 <div id="info">demo page</div>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/84/three.min.js"></script>
-  <script src="https://threejs.org/examples/js/controls/OrbitControls.js"></script>
-  <script src="https://jyunming-chen.github.io/tutsplus/js/KeyboardState.js"></script>
-  <script src="https://psychoticvenom.github.io/FSM/state-machine.js"></script>
-  <script src="https://rawgit.com/jyunming-chen/tutsplus/master/js/text2D.js"></script>
-  <script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
-  <script src="HunterFSM.js"></script>
-	
-<div id ='status' ></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/84/three.min.js"></script>
+<script src="https://threejs.org/examples/js/controls/OrbitControls.js"></script>
+<script src="https://jyunming-chen.github.io/tutsplus/js/KeyboardState.js"></script>
+<script src="https://psychoticvenom.github.io/FSM/state-machine.js"></script>
+<script src="https://rawgit.com/jyunming-chen/tutsplus/master/js/text2D.js"></script>
+<script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+<script src="HunterFSM.js"></script>
+  
 <head>
 <style>
 
@@ -20,17 +19,6 @@
   top: 0px;
   width: 100%;
   padding: 10px;
-  text-align: center;
-  color: #ffff00
-}
-
-#status {
-  border:5px solid yellow;
-  width:280px;height:35px;
-  position: absolute;
-  bottom: 60px;
-  right:40px;
-  font-size:20px;
   text-align: center;
   color: #ffff00
 }
@@ -65,385 +53,367 @@ var textAlign = THREE_Text.textAlign;
 
 var count = 1 ;
 
-var Hunter = function(initPos) {
+var Hunter = function(initPos){
   
-  this.pos = new THREE.Vector3();
-  if (initPos) this.pos.copy(initPos);
-  this.vel = new THREE.Vector3();
-  this.force = new THREE.Vector3();
-  this.angle = 0;
-  this.tmp = 0;
-  this.maxSpeed = 10;
-  this.maxForce = 10;
-  this.mesh = createHunter();
-  scene.add(this.mesh);
-  this.mesh.position.copy(this.pos);
-  this.target = new THREE.Vector3();
-  this.directSightV = new THREE.Vector3(1, 0, 0);
-  this.SightV = new THREE.Vector3(50, 0, 30).normalize();
-  this.sightAngle = this.directSightV.angleTo(this.SightV); 
-  
-  this.sprite = new SpriteText2D( "Hunter : Stand", {
-   	 		align: textAlign.center,
-    		font: '40px Consolas',
-    		fillStyle: '#ff0000',
-    		antialias: true
-  		}); 
-  this.sprite.scale.set(0.2 , 0.2 , 0.2);
-  this.mesh.add(this.sprite);
-  this.sprite.position.y = 20;
+	this.pos = new THREE.Vector3();
+	if (initPos) this.pos.copy(initPos);
+	this.vel = new THREE.Vector3();
+	this.force = new THREE.Vector3();
+	this.angle = 0;
+	this.tmp = 0;
+	this.maxSpeed = 10;
+	this.maxForce = 10;
+	this.mesh = createHunter();
+	scene.add(this.mesh);
+	this.mesh.position.copy(this.pos);
+	this.target = new THREE.Vector3();
+	this.directSightV = new THREE.Vector3(1, 0, 0);
+	this.SightV = new THREE.Vector3(50, 0, 30).normalize();
+	this.sightAngle = this.directSightV.angleTo(this.SightV); 
 
-  this.fsm = hunterFSM();
-  
-  this.computeForce = function(dt){
-  		
-      this.force =  this.target.clone().sub(this.pos).setLength(this.maxSpeed).sub(this.vel);   
-      for (var i = 0; i < obstacles.length; i++) {
-        var tmp = obstacles[i].position.clone().sub(this.pos);
-        var tmpProj = tmp.clone().projectOnVector(this.vel);
-        if (tmp.dot(this.vel) > 0) {
-          if (tmpProj.clone().sub(tmp).length() < objRad[i] + 4) {
-						console.log("Oh");
-            if (tmpProj.length() < 5 * this.vel.length()) {
-              this.force.add(tmpProj.clone().sub(tmp).multiplyScalar(2));
-            }
-          }
-        }
-      }
-      // force clamping
-      if (this.force.length() > this.maxForce)
-        this.force.setLength(this.maxForce);
-      
-      this.vel.add(this.force.clone().multiplyScalar(dt));
+	this.sprite = new SpriteText2D( "Hunter : Stand", {
+		align: textAlign.center,
+		font: '40px Consolas',
+		fillStyle: '#ff0000',
+		antialias: true
+	}); 
+	this.sprite.scale.set(0.2 , 0.2 , 0.2);
+	this.mesh.add(this.sprite);
+	this.sprite.position.y = 20;
+
+	this.fsm = hunterFSM(this.mesh, this.sprite);
+
+	this.computeForce = function(dt){
+		
+		this.force =  this.target.clone().sub(this.pos).setLength(this.maxSpeed).sub(this.vel);   
+		for (var i = 0; i < obstacles.length; i++) {
+			var tmp = obstacles[i].position.clone().sub(this.pos);
+			var tmpProj = tmp.clone().projectOnVector(this.vel);
+			if (tmp.dot(this.vel) > 0) {
+				if (tmpProj.clone().sub(tmp).length() < objRad[i] + 4) {
+					console.log("Oh");
+					if (tmpProj.length() < 5 * this.vel.length()) {
+						this.force.add(tmpProj.clone().sub(tmp).multiplyScalar(2));
+					}
+				}
+			}
+		}
+		// force clamping
+		if (this.force.length() > this.maxForce)
+			this.force.setLength(this.maxForce);
+	  
+		this.vel.add(this.force.clone().multiplyScalar(dt));
 			   
-      // velocity clamping
-      if (this.vel.length() > this.maxSpeed)
-        this.vel.setLength(this.maxSpeed);
-      this.pos.add(this.vel.clone().multiplyScalar(.05));
+		// velocity clamping
+		if (this.vel.length() > this.maxSpeed)
+			this.vel.setLength(this.maxSpeed);
+		this.pos.add(this.vel.clone().multiplyScalar(.05));
 			this.pos.y = 0 ;
-      
-      if (this.vel.length() > 0.001) {
-        this.angle = Math.atan2(-this.vel.z, this.vel.x);
-      }
-          
-      this.mesh.position.copy(this.pos);
-      this.mesh.rotation.y = this.angle;		
-  
-  }
-  
-  this.setRandomTarget = function(){
-	  var randomX = Math.random() * 201 - 100;  
-	  var randomZ = Math.random() * 201 - 100 ;  
-	  this.target = new THREE.Vector3(randomX , 0 , randomZ);
-  }
-  
+	  
+		if (this.vel.length() > 0.001) {
+			this.angle = Math.atan2(-this.vel.z, this.vel.x);
+		}
+		  
+		this.mesh.position.copy(this.pos);
+		this.mesh.rotation.y = this.angle;
+	}
+
+	this.setRandomTarget = function(){
+	
+		var randomX = Math.random() * 201 - 100;  
+		var randomZ = Math.random() * 201 - 100 ;  
+		this.target = new THREE.Vector3(randomX , 0 , randomZ);
+	}
 }
 
-function gameStart() {
+function gameStart(){
 
-  if (catched) {
-    for (var i = 0; i < hunters.length; i++) {
-      scene.remove(hunters[i].mesh);
-      scene.remove(hunters[i]);
-      //hunters[i].geometry.dispose();
-    }
-    hunters = [] ;
-    catched = false;
-    count = 0 ;
-  }
-  setHunters();
-  clock = new THREE.Clock();
-  for (var i = 0; i < hunters.length; i++) {
-      hunters[i].setRandomTarget();
-  }
-   player.position.set( 0 , 0 , 0 ) ;
+	if (catched){
+		for (var i = 0; i < hunters.length; i++){
+			scene.remove(hunters[i].mesh);
+			scene.remove(hunters[i]);
+			//hunters[i].geometry.dispose();
+		}
+		hunters = [] ;
+		catched = false;
+		count = 0 ;
+	}
+	setHunters();
+	clock = new THREE.Clock();
+	for (var i = 0; i < hunters.length; i++){
+		hunters[i].setRandomTarget();
+	}
+	player.position.set( 0 , 0 , 0 );
 }
 
-function createPlayer() {
+function createPlayer(){
 
-  var mesh = new THREE.Mesh(new THREE.CylinderGeometry(4, 4, 4, 32), new THREE.MeshNormalMaterial());
-  mesh.name = "Player";
-  player.add(mesh);
-  obj.push(player) ;
-  scene.add(player);
+	var mesh = new THREE.Mesh(new THREE.CylinderGeometry(4, 4, 4, 32), new THREE.MeshNormalMaterial());
+	mesh.name = "Player";
+	player.add(mesh);
+	obj.push(player);
+	scene.add(player);
 }
 
-function setHunters() {
+function setHunters(){
 
-  //hunters.push(new Hunter(new THREE.Vector3(-70, 0, 70)));
-  //hunters.push(new Hunter(new THREE.Vector3(50, 0, 50)));
-  hunters.push(new Hunter(new THREE.Vector3(-50, 0, -70)));
+	//hunters.push(new Hunter(new THREE.Vector3(-70, 0, 70)));
+	//hunters.push(new Hunter(new THREE.Vector3(50, 0, 50)));
+	hunters.push(new Hunter(new THREE.Vector3(-50, 0, -70)));
 	
 }
 
 function setObstacles(){
 
-  var obstacle1 = new THREE.Object3D();
-  var mesh1 = new THREE.Mesh( new THREE.CylinderGeometry( 30, 30, 6, 20 ) );
-  mesh1.name = "Obstacle1" ;
-  obstacle1.add(mesh1);
-  obstacle1.position.set(-50 , 0 , -20 );
-  
-  var obstacle2 = new THREE.Object3D();
-  var mesh2 = new THREE.Mesh( new THREE.CylinderGeometry(20, 20, 6, 20 ) );
-	mesh2.name = "Obstacle2" ;
-  obstacle2.add(mesh2);
-  obstacle2.position.set( 30, 0, 30 ) ;
-  
-  var obstacle3 = new THREE.Object3D();
-  var mesh3 = new THREE.Mesh( new THREE.CylinderGeometry(25, 25, 6, 20 ) );
-	mesh3.name = "Obstacle3" ;
-  obstacle3.add(mesh3);
-  obstacle3.position.set( 50, 0, -50 ) ;
-  
-  var obstacle4 = new THREE.Object3D();
-  var mesh4 = new THREE.Mesh( new THREE.CylinderGeometry(20, 20, 6, 20 ) );
-	mesh4.name = "Obstacle4" ;
-  obstacle4.add(mesh4);
-  obstacle4.position.set( -30, 0, 70 ) ;
-  
-  scene.add( obstacle1 , obstacle2 , obstacle3 , obstacle4 );
-  obj.push(obstacle1 , obstacle2 , obstacle3 , obstacle4 ) ;
-  obstacles.push(obstacle1 , obstacle2 , obstacle3 , obstacle4 );
+	var obstacle1 = new THREE.Object3D();
+	var mesh1 = new THREE.Mesh( new THREE.CylinderGeometry( 30, 30, 6, 20 ) );
+	mesh1.name = "Obstacle1";
+	obstacle1.add(mesh1);
+	obstacle1.position.set(-50 , 0 , -20 );
+
+	var obstacle2 = new THREE.Object3D();
+	var mesh2 = new THREE.Mesh( new THREE.CylinderGeometry(20, 20, 6, 20 ) );
+	mesh2.name = "Obstacle2";
+	obstacle2.add(mesh2);
+	obstacle2.position.set( 30, 0, 30 ) ;
+
+	var obstacle3 = new THREE.Object3D();
+	var mesh3 = new THREE.Mesh( new THREE.CylinderGeometry(25, 25, 6, 20 ) );
+	mesh3.name = "Obstacle3";
+	obstacle3.add(mesh3);
+	obstacle3.position.set( 50, 0, -50 );
+
+	var obstacle4 = new THREE.Object3D();
+	var mesh4 = new THREE.Mesh( new THREE.CylinderGeometry(20, 20, 6, 20 ) );
+	mesh4.name = "Obstacle4";
+	obstacle4.add(mesh4);
+	obstacle4.position.set( -30, 0, 70 );
+
+	scene.add( obstacle1 , obstacle2 , obstacle3 , obstacle4 );
+	obj.push(obstacle1 , obstacle2 , obstacle3 , obstacle4 );
+	obstacles.push(obstacle1 , obstacle2 , obstacle3 , obstacle4 );
 
 }
 
 function checkOutside( currentPos){
+
 	if( currentPos.x + 5 > maxX)
-		return new THREE.Vector3(-1 , 0 ,  0) ;
-  else if ( currentPos.x - 5 < minX)
-  	return new THREE.Vector3( 1 , 0 ,  0) ;
-  else if ( currentPos.z + 5 > maxZ)
-  	return new THREE.Vector3( 0 , 0 , -1) ;
-  else if ( currentPos.z - 5 < minZ)
-  	return new THREE.Vector3( 0 , 0 ,  1) ;
-  else 
-  	return new THREE.Vector3( 0 , 0 , 0 ) ;
+		return new THREE.Vector3(-1 , 0 ,  0);
+	else if ( currentPos.x - 5 < minX)
+		return new THREE.Vector3( 1 , 0 ,  0);
+	else if ( currentPos.z + 5 > maxZ)
+		return new THREE.Vector3( 0 , 0 , -1);
+	else if ( currentPos.z - 5 < minZ)
+		return new THREE.Vector3( 0 , 0 ,  1);
+	else 
+		return new THREE.Vector3( 0 , 0 , 0 );
 }
 
-function createHunter() {
+function createHunter(){
 
-  geometry = new THREE.Geometry();
-  geometry.vertices.push(
-    new THREE.Vector3(0, 0, -4),
-    new THREE.Vector3(0, 0, 4),
-    new THREE.Vector3(10.14, 0, 0),
-    new THREE.Vector3(0, 4, 0)
-  );
-  geometry.faces.push(
-    new THREE.Face3(3, 1, 2),
-    new THREE.Face3(3, 2, 0),
-    new THREE.Face3(3, 0, 1),
-    new THREE.Face3(1, 0, 2)
-  );
-  geometry.computeBoundingSphere();
-  geometry.computeFaceNormals();
-  geometry.computeVertexNormals();
+	var geometry = new THREE.Geometry();
+	geometry.vertices.push(
+		new THREE.Vector3(0, 0, -4),
+		new THREE.Vector3(0, 0, 4),
+		new THREE.Vector3(10.14, 0, 0),
+		new THREE.Vector3(0, 4, 0)
+	);
+	geometry.faces.push(
+		new THREE.Face3(3, 1, 2),
+		new THREE.Face3(3, 2, 0),
+		new THREE.Face3(3, 0, 1),
+		new THREE.Face3(1, 0, 2)
+	);
+	geometry.computeBoundingSphere();
+	geometry.computeFaceNormals();
+	geometry.computeVertexNormals();
 
-  var material = new THREE.MeshNormalMaterial();
-  mesh = new THREE.Mesh(geometry, material);
+	var material = new THREE.MeshNormalMaterial();
+	var mesh = new THREE.Mesh(geometry, material);
 
-  return mesh;
-
+	return mesh;
 }
 
 init();
 animate();
 
-function init() {
-  scene = new THREE.Scene();
+function init(){
 
-  camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 1, 1000);
-  camera.position.y = 200;
-  camera.position.z = 250;
-  scene.add(camera);
+	scene = new THREE.Scene();
 
-  gridxz = new THREE.GridHelper(200, 20, 'red', 'white');
-  scene.add(gridxz);
+	camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 1, 1000);
+	camera.position.y = 200;
+	camera.position.z = 250;
+	scene.add(camera);
 
-  renderer = new THREE.WebGLRenderer();
-  renderer.setSize(window.innerWidth, window.innerHeight);
-  renderer.setClearColor(0x888888);
+	gridxz = new THREE.GridHelper(200, 20, 'red', 'white');
+	scene.add(gridxz);
 
-  controls = new THREE.OrbitControls(camera, renderer.domElement);
-  document.body.appendChild(renderer.domElement);
+	light = new THREE.PointLight(0xffffff);
+	light.position.set(100, 300, 200);
+	scene.add(light);
 
-  plane = new THREE.Mesh(new THREE.PlaneGeometry(200, 200), new THREE.MeshBasicMaterial({
-    visible: false
-  }));
-  scene.add(plane);
-  plane.rotation.x = -Math.PI / 2;
-  pickables = [plane];
+	renderer = new THREE.WebGLRenderer();
+	renderer.setSize(window.innerWidth, window.innerHeight);
+	renderer.setClearColor(0x888888);
+
+	controls = new THREE.OrbitControls(camera, renderer.domElement);
+	document.body.appendChild(renderer.domElement);
+
+	plane = new THREE.Mesh(new THREE.PlaneGeometry(200, 200), new THREE.MeshBasicMaterial({
+		visible: false
+	}));
+	scene.add(plane);
+	plane.rotation.x = -Math.PI / 2;
+	pickables = [plane];
+
+	setObstacles();
+	createPlayer();
+	gameStart();
+
+	raycaster = new THREE.Raycaster();
+	document.addEventListener('mousedown', onDocumentMouseDown, false);
+}
+
+function onDocumentMouseDown(event){
+
+	event.preventDefault();
+	mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+	mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+	// find intersections
+	raycaster.setFromCamera(mouse, camera);
+	var intersects = raycaster.intersectObjects(pickables);
+	if (intersects.length > 0){
+		player.position.copy(intersects[0].point);
+		player.position.y = 2;
+	}
+}
+
+function animate(){
   
-  setObstacles();
-  createPlayer();
-  gameStart();
+	if (!catched){
 
-  raycaster = new THREE.Raycaster();
-  document.addEventListener('mousedown', onDocumentMouseDown, false);
+		for ( var i = 0; i < hunters.length; i++){
+
+			//Used in all state
+			var sight = new THREE.Vector3(1, 0 , 0).applyAxisAngle(new THREE.Vector3(0, 1, 0), hunters[i].angle ).normalize();
+			var raycasterA = new THREE.Raycaster( hunters[i].pos , sight  );
+			var intersects = raycasterA.intersectObjects(obj , true);
+
+			//Used in seek and patrol
+			hunters[i].directSightV = new THREE.Vector3(1, 0, 0).applyAxisAngle(new THREE.Vector3(0 , 1, 0), hunters[i].angle).normalize();
+			var distanceToPlayerV = player.position.clone().sub(hunters[i].pos).normalize();		
+			var angleBetweenPlayer = hunters[i].directSightV.angleTo(distanceToPlayerV);
+			var inSight = hunters[i].sightAngle >=  angleBetweenPlayer ? true : false;
+
+			if( hunters[i].fsm.current == "stand" ){
+			
+				hunters[i].force = new THREE.Vector3();
+				hunters[i].vel  = new THREE.Vector3();
+			
+				if( intersects.length !== 0  ){
+					if( intersects[0].object.name === "Player" ){
+						hunters[i].fsm.found();
+						hunters[i].target = player.position.clone();
+					}
+					else if(  player.position.clone().distanceTo(hunters[i].pos) <= 50 ){
+						hunters[i].fsm.hear();
+					}
+				}
+				else if(  player.position.clone().distanceTo(hunters[i].pos) <= 50 ){
+					hunters[i].fsm.hear();
+				}
+			} 
+			else if( hunters[i].fsm.current == "search" ){
+			
+				hunters[i].force = new THREE.Vector3();
+				hunters[i].vel  = new THREE.Vector3();
+				hunters[i].angle += 0.01 ;
+				hunters[i].tmp += 0.01 ; 
+				//hunters[i].angle %= Math.PI * 2 ;
+				
+				if( hunters[i].tmp >= Math.PI * 2 ){  	
+					hunters[i].tmp = 0;
+					hunters[i].angle = 0;
+					hunters[i].fsm.nfound();
+				}
+				hunters[i].mesh.rotation.y = hunters[i].angle;
+				
+				if( intersects.length !== 0  ){
+					if( intersects[0].object.name === "Player" ){
+						hunters[i].fsm.found();
+						hunters[i].target = player.position.clone();
+					}  
+				}
+			} 
+			else if( hunters[i].fsm.current == "seek" ){
+			
+				if( inSight ){
+					raycasterA = new THREE.Raycaster( hunters[i].pos , distanceToPlayerV ) ;
+				}
+				
+				if( intersects.length !== 0  ){
+					if( intersects[0].object.name === "Player" ){
+						hunters[i].target = player.position.clone();
+					}  
+					else{
+						hunters[i].fsm.lost(); 
+						hunters[i].setRandomTarget();
+					}
+				}
+				else{
+					hunters[i].fsm.lost(); 
+					hunters[i].setRandomTarget();
+				}
+				
+				hunters[i].computeForce( clock.getDelta() ) ;
+				
+				if (hunters[i].pos.distanceTo(player.position) <= 5 ){
+					hunters[i].fsm.catched(); 
+				}
+			} 
+			else if( hunters[i].fsm.current == "patrol" ){
+			
+				if(hunters[i].pos.distanceTo(hunters[i].target) <= 5){
+					hunters[i].setRandomTarget();
+				}
+
+				if( inSight ){
+					raycasterA = new THREE.Raycaster( hunters[i].pos , distanceToPlayerV );
+				}
+				
+				if( intersects.length !== 0  ){
+					if( intersects[0].object.name === "Player" && inSight  ){
+						hunters[i].fsm.found();
+						hunters[i].target = player.position.clone();
+					}
+					else if(  player.position.clone().distanceTo(hunters[i].pos) <= 50 ){
+						hunters[i].fsm.hear();
+					}
+				}
+				else if(  player.position.clone().distanceTo(hunters[i].pos) <= 50 ){
+					hunters[i].fsm.hear();
+				}
+				hunters[i].computeForce( clock.getDelta() );
+			} 
+			else if( hunters[i].fsm.current == "catch" ){
+		  
+				hunters[i].force = new THREE.Vector3();
+				hunters[i].vel = new THREE.Vector3();
+				catched = true;
+				gameStart();
+			} 
+		}
+	}
+
+	controls.update();
+	requestAnimationFrame(animate);
+	render();
 }
 
-function onDocumentMouseDown(event) {
-
-  event.preventDefault();
-  mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-  mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-
-  // find intersections
-  raycaster.setFromCamera(mouse, camera);
-  var intersects = raycaster.intersectObjects(pickables);
-  if (intersects.length > 0) {
-    player.position.copy(intersects[0].point);
-    player.position.y = 2;
-  }
-
-}
-
-function animate() {
-  
-  if (!catched) {
-    for ( var i = 0; i < hunters.length; i++) {
-      if( hunters[i].fsm.current == "stand" ){
-		
-		hunters[i].sprite.text = "Hunter : Stand" ;
-		hunters[i].force = new THREE.Vector3();
-		hunters[i].vel  = new THREE.Vector3();
-		
-		var sight = new THREE.Vector3(1, 0 , 0).applyAxisAngle(new THREE.Vector3(0, 1, 0), hunters[i].angle ).normalize();
-		var raycasterA = new THREE.Raycaster( hunters[i].pos , sight  ) ;
-		var intersects = raycasterA.intersectObjects(obj , true)  ;
-		if( intersects.length !== 0  ){
-		  if( intersects[0].object.name === "Player" ){
-			hunters[i].fsm.found();
-			hunters[i].target = player.position.clone();
-		  }
-		  else if(  player.position.clone().distanceTo(hunters[i].pos) <= 50 ){
-			hunters[i].fsm.hear();
-			count = 1;
-		  }
-		}
-	
-	  } 
-      else if( hunters[i].fsm.current == "search" ){
-		
-		hunters[i].sprite.text = "Hunter : Search" ;
-		hunters[i].force = new THREE.Vector3();
-		hunters[i].vel  = new THREE.Vector3();
-		hunters[i].angle += 0.01 ;
-		hunters[i].tmp += 0.01 ; 
-		//hunters[i].angle %= Math.PI * 2 ;
-		
-		if( hunters[i].tmp >= Math.PI * 2 ){  	
-		  hunters[i].tmp = 0 ;
-		  hunters[i].angle -=  Math.PI * 2 ;
-		  hunters[i].fsm.nfound();
-		  count = 1 ;
-		}
-		hunters[i].mesh.rotation.y = hunters[i].angle;
-		console.log( hunters[i].angle ) ;
-		var sight = new THREE.Vector3(1, 0 , 0).applyAxisAngle(new THREE.Vector3(0, 1, 0), hunters[i].angle ).normalize();
-		var raycasterA = new THREE.Raycaster( hunters[i].pos , sight  ) ;
-		var intersects = raycasterA.intersectObjects(obj , true)  ;
-		if( intersects.length !== 0  ){
-		  if( intersects[0].object.name === "Player" ){
-			hunters[i].fsm.found();
-			hunters[i].target = player.position.clone();
-		  }  
-		}
-		
-	  } 
-      else if( hunters[i].fsm.current == "seek" ){
-		
-		hunters[i].sprite.text = "Hunter : Seek" ;
-		hunters[i].directSightV = new THREE.Vector3(1, 0, 0).applyAxisAngle(new THREE.Vector3(0 , 1, 0), hunters[i].angle).normalize() ;
-
-		var distanceToPlayerV = player.position.clone().sub(hunters[i].pos).normalize();		
-		var angleBetweenPlayer = hunters[i].directSightV.angleTo(distanceToPlayerV) ;
-		var inSight = hunters[i].sightAngle >=  angleBetweenPlayer ? true : false ; 
-
-		if( inSight ){
-		  var raycasterA = new THREE.Raycaster( hunters[i].pos , distanceToPlayerV ) ;
-		}
-		else{
-		  var sight = new THREE.Vector3(1, 0 , 0).applyAxisAngle(new THREE.Vector3(0, 1, 0), hunters[i].angle ).normalize();
-		  var raycasterA = new THREE.Raycaster( hunters[i].pos , sight  ) ;
-		}
-
-		var intersects = raycasterA.intersectObjects(obj , true)  ;
-		if( intersects.length !== 0  ){
-		  if( intersects[0].object.name === "Player" ){
-			hunters[i].target = player.position.clone();
-		  }  
-		  else{
-			hunters[i].fsm.lost(); 
-			hunters[i].setRandomTarget();
-			count = 1 ;  
-		  }
-		}
-		else{
-		  hunters[i].fsm.lost(); 
-		  hunters[i].setRandomTarget();
-		  count = 1 ;  
-		}
-		
-		hunters[i].computeForce( clock.getDelta() ) ;
-		
-		if (hunters[i].pos.distanceTo(player.position) <= 5 ) {
-		  hunters[i].fsm.catched(); 
-		}
-		
-	  } 
-      else if( hunters[i].fsm.current == "patrol" ){
-	  
-		hunters[i].sprite.text = "Hunter : Patrol" ;
-		
-		setTimeout (function() {
-			hunters[i].setRandomTarget();
-		},1500);
-		
-		hunters[i].directSightV = new THREE.Vector3(1, 0, 0).applyAxisAngle(new THREE.Vector3(0 , 1, 0), hunters[i].angle).normalize() ;
-
-		var distanceToPlayerV = player.position.clone().sub(hunters[i].pos).normalize();		
-		var angleBetweenPlayer = hunters[i].directSightV.angleTo(distanceToPlayerV);
-		var inSight = hunters[i].sightAngle >=  angleBetweenPlayer ? true : false; 
-
-		if( inSight ){
-		  var raycasterA = new THREE.Raycaster( hunters[i].pos , distanceToPlayerV );
-		}
-		else{
-		  var sight = new THREE.Vector3(1, 0 , 0).applyAxisAngle(new THREE.Vector3(0, 1, 0), hunters[i].angle ).normalize();
-		  var raycasterA = new THREE.Raycaster( hunters[i].pos , sight  );
-		}
-
-		var intersects = raycasterA.intersectObjects(obj , true);
-		if( intersects.length !== 0  ){
-		  if( intersects[0].object.name === "Player" && inSight  ){
-			hunters[i].fsm.found();
-			hunters[i].target = player.position.clone();
-		  }  
-		}
-		hunters[i].computeForce( clock.getDelta() );
-		
-	  } 
-      else if( hunters[i].fsm.current == "catch" ){
-	  
-		hunters[i].sprite.text = "Hunter : Catch" ;
-		hunters[i].force = new THREE.Vector3();
-		hunters[i].vel = new THREE.Vector3();
-		catched = true;
-		gameStart();
-		
-	  } 
-    }
-  }
-
-  controls.update();
-  requestAnimationFrame(animate);
-  render();
-}
-
-function render() {
-  renderer.render(scene, camera);
+function render(){
+	renderer.render(scene, camera);
 }
 
 </script>
